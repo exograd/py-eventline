@@ -61,14 +61,26 @@ class Client:
     default_endpoint = "https://api.eventline.net/v0"
 
     def __init__(
-        self, endpoint: str = default_endpoint, timeout: float = 10.0
+        self,
+        /,
+        endpoint: str = default_endpoint,
+        timeout: float = 10.0,
+        api_key: Optional[str] = None,
     ) -> None:
         self.endpoint = endpoint
         self.endpoint_components = urllib.parse.urlparse(self.endpoint)
         self.timeout = timeout
+        self.api_key = api_key
+        if self.api_key is None:
+            self.api_key = eventline.environment.api_key()
 
     def send_request(
-        self, method: str, path: str, /, body: Optional[Any] = None
+        self,
+        method: str,
+        path: str,
+        /,
+        body: Optional[Any] = None,
+        project_id: Optional[str] = None,
     ) -> requests.Response:
         """Send a HTTP request and return the response.
 
@@ -77,10 +89,10 @@ class Client:
         """
         uri = self.build_uri(path)
         headers = {}
-        api_key = eventline.environment.api_key()
-        if api_key is not None:
-            headers["Authorization"] = f"Bearer {api_key}"
-        project_id = eventline.environment.project_id()
+        if self.api_key is not None:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        if project_id is None:
+            project_id = eventline.environment.project_id()
         if project_id is not None:
             headers["X-Eventline-Project-Id"] = project_id
         try:
