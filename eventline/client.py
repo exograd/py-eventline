@@ -21,6 +21,7 @@ import urllib.parse
 
 import requests
 
+import eventline.environment
 
 log = logging.getLogger(__name__)
 
@@ -75,9 +76,13 @@ class Client:
         indicates an error.
         """
         uri = self.build_uri(path)
+        headers = {}
+        api_key = eventline.environment.api_key()
+        if api_key is not None:
+            headers["Authorization"] = f"Bearer {api_key}"
         try:
             response = requests.request(
-                method, uri, json=body, timeout=self.timeout
+                method, uri, headers=headers, json=body, timeout=self.timeout
             )
         except Exception as ex:
             raise ClientError(ex) from ex
