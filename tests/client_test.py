@@ -14,7 +14,7 @@
 
 import pytest
 
-from eventline.client import Client
+from eventline.client import APIError, Client
 
 
 def test_build_uri_default_endpoint():
@@ -33,3 +33,12 @@ def test_send_request_status():
     c = Client()
     res = c.send_request("GET", "/status")
     assert res.status_code == 200
+
+
+def test_send_request_error():
+    c = Client()
+    with pytest.raises(APIError) as exinfo:
+        c.send_request("GET", "/does_not_exist")
+    ex = exinfo.value
+    assert ex.status == 404
+    assert ex.error_code == "route_not_found"

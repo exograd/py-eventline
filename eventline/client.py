@@ -14,6 +14,7 @@
 
 """The eventline.client module contains the client for the Eventline API."""
 
+import json.decoder
 import logging
 from typing import Any, Optional
 import urllib.parse
@@ -28,16 +29,29 @@ class ClientError(Exception):
     """An error encountered by the client."""
 
 
-class RequestError(ClientError):
-    """An error signaled when a request failed."""
+class APIError(ClientError):
+    """An error signaled when a request failed due to an API error."""
 
-    def __init__(self, method: str, uri: str, status: int) -> None:
-        msg = f"{method} {uri}: request failed with status {status}"
-        super().__init__(msg)
+    def __init__(
+        self,
+        method: str,
+        uri: str,
+        status: int,
+        /,
+        error_message: Optional[str],
+        error_code: Optional[str],
+    ) -> None:
+        message = f"{method} {uri}: request failed with status {status}"
+        if error_message is not None:
+            message += f": {error_message}"
+
+        super().__init__(message)
 
         self.method = method
         self.uri = uri
         self.status = status
+        self.error_code = error_code
+        self.error_message = error_message
 
 
 class Client:
@@ -52,9 +66,33 @@ class Client:
     def send_request(
         self, method: str, path: str, /, body: Optional[Any] = None
     ) -> requests.Response:
-        """Send a HTTP request and return the response."""
+        """Send a HTTP request and return the response.
+
+        Raise an APIError exception if the status code of the response
+        indicates an error.
+        """
         uri = self.build_uri(path)
-        return requests.request(method, uri, json=body)
+        try:
+            response = requests.request(method, uri, json=body)
+        except Exception as ex:
+            raise ClientError(ex) from ex
+        if not (response.status_code >= 200 and response.status_code < 300):
+            message = response.reason
+            code = None
+            try:
+                error = response.json()
+                message = error["error"]
+                code = error["code"]
+            except json.decoder.JSONDecodeError:
+                pass
+            raise APIError(
+                method,
+                uri,
+                response.status_code,
+                error_message=message,
+                error_code=code,
+            )
+        return response
 
     def build_uri(self, path: str) -> str:
         """Construct the URI for an Eventline API route."""
