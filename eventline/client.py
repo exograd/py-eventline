@@ -69,7 +69,11 @@ class Client:
     ) -> None:
         self.endpoint = endpoint
         self.endpoint_components = urllib.parse.urlparse(self.endpoint)
+        if self.endpoint_components[0].lower() != "https":
+            raise ClientError("invalid non-https endpoint uri scheme")
+
         self.timeout = timeout
+
         self.api_key = api_key
         if self.api_key is None:
             self.api_key = eventline.environment.api_key()
