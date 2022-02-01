@@ -1,0 +1,11 @@
+# Introduction
+
+This repository contains the Python SDK for the
+[Eventline](https://www.exograd.com/products/eventline) platform.
+
+# Documentation
+*TODO*
+
+# Contact
+If you find a bug or have any question, feel free to open a GitHub issue or
+contact our support by email.
