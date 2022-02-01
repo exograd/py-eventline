@@ -59,9 +59,12 @@ class Client:
 
     default_endpoint = "https://api.eventline.net/v0"
 
-    def __init__(self, endpoint: str = default_endpoint) -> None:
+    def __init__(
+        self, endpoint: str = default_endpoint, timeout: float = 10.0
+    ) -> None:
         self.endpoint = endpoint
         self.endpoint_components = urllib.parse.urlparse(self.endpoint)
+        self.timeout = timeout
 
     def send_request(
         self, method: str, path: str, /, body: Optional[Any] = None
@@ -73,7 +76,9 @@ class Client:
         """
         uri = self.build_uri(path)
         try:
-            response = requests.request(method, uri, json=body)
+            response = requests.request(
+                method, uri, json=body, timeout=self.timeout
+            )
         except Exception as ex:
             raise ClientError(ex) from ex
         if not (response.status_code >= 200 and response.status_code < 300):
