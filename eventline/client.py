@@ -80,6 +80,9 @@ class Client:
         api_key = eventline.environment.api_key()
         if api_key is not None:
             headers["Authorization"] = f"Bearer {api_key}"
+        project_id = eventline.environment.project_id()
+        if project_id is not None:
+            headers["X-Eventline-Project-Id"] = project_id
         try:
             response = requests.request(
                 method, uri, headers=headers, json=body, timeout=self.timeout

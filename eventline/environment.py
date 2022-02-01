@@ -25,3 +25,10 @@ def api_key() -> Optional[str]:
     one or None if there is not one.
     """
     return os.environ.get("EVENTLINE_API_KEY")
+
+
+def project_id() -> Optional[str]:
+    """Return the identifier of the current project if it is available in the
+    current environment.
+    """
+    return os.environ.get("EVENTLINE_PROJECT_ID")
