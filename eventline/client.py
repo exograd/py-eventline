@@ -66,6 +66,7 @@ class Client:
         endpoint: str = default_endpoint,
         timeout: float = 10.0,
         api_key: Optional[str] = None,
+        project_id: Optional[str] = None,
     ) -> None:
         self.endpoint = endpoint
         self.endpoint_components = urllib.parse.urlparse(self.endpoint)
@@ -78,13 +79,12 @@ class Client:
         if self.api_key is None:
             self.api_key = eventline.environment.api_key()
 
+        self.project_id = project_id
+        if self.project_id is None:
+            self.project_id = eventline.environment.project_id()
+
     def send_request(
-        self,
-        method: str,
-        path: str,
-        /,
-        body: Optional[Any] = None,
-        project_id: Optional[str] = None,
+        self, method: str, path: str, /, body: Optional[Any] = None
     ) -> requests.Response:
         """Send a HTTP request and return the response.
 
@@ -95,10 +95,8 @@ class Client:
         headers = {}
         if self.api_key is not None:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        if project_id is None:
-            project_id = eventline.environment.project_id()
-        if project_id is not None:
-            headers["X-Eventline-Project-Id"] = project_id
+        if self.project_id is not None:
+            headers["X-Eventline-Project-Id"] = self.project_id
         try:
             response = requests.request(
                 method, uri, headers=headers, json=body, timeout=self.timeout
