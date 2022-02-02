@@ -12,13 +12,18 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import base64
 import datetime
+import hashlib
 import json.decoder
 import logging
 from typing import Any, Optional
 import urllib.parse
 
+import OpenSSL.crypto
 import requests
+import requests.adapters
+from requests.packages import urllib3
 
 import eventline.environment
 import eventline.requests
@@ -83,8 +88,8 @@ class Client:
         if self.project_id is None:
             self.project_id = eventline.environment.project_id()
 
-        self.http_session = requests.Session()
-        self.http_session.verify = eventline.ca_bundle_path
+        self.session = requests.Session()
+        self.session.verify = eventline.ca_bundle_path
 
     def send_request(
         self, method: str, path: str, /, body: Optional[Any] = None
@@ -102,7 +107,7 @@ class Client:
         if self.project_id is not None:
             headers["X-Eventline-Project-Id"] = self.project_id
         try:
-            response = self.http_session.request(
+            response = self.session.request(
                 method,
                 uri,
                 auth=auth,
@@ -155,3 +160,29 @@ def format_request_time(delta: datetime.timedelta) -> str:
     if seconds < 1.0:
         return f"{seconds*1_000:.0f}ms"
     return f"{seconds:0.1f}s"
+
+
+class HTTPSConnectionPool(urllib3.HTTPSConnectionPool):
+    """An urllib3 connection pool which performs public key pinning."""
+
+    def _validate_conn(self, conn: urllib3.connection.HTTPConnection) -> None:
+        super()._validate_conn(conn)
+        if not conn.is_verified:
+            return
+
+        cert_data = conn.sock.getpeercert(binary_form=True)
+        cert = OpenSSL.crypto.load_certificate(
+            OpenSSL.crypto.FILETYPE_ASN1, cert_data
+        )
+
+        key = cert.get_pubkey()
+        key_data = OpenSSL.crypto.dump_publickey(
+            OpenSSL.crypto.FILETYPE_ASN1, key
+        )
+
+        pin = hashlib.sha256(key_data).hexdigest()
+
+        if not pin in eventline.public_key_pins:
+            raise ClientError(
+                f"invalid server certificate: unknown public key (pin {pin})"
+            )

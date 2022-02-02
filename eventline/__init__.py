@@ -14,6 +14,19 @@
 
 import os
 
+import requests.packages.urllib3 as urllib3
+
+import eventline.client
+
 ca_bundle_path = os.path.join(
     os.path.dirname(__file__), "data", "ca-certificates.crt"
 )
+
+# https://www.exograd.com/resources/pki/
+public_key_pins = [
+    "820df1ed4e14ad67d352960dcbdc0bdbe198390862ddf8395139f9a7303aee07"
+]
+
+urllib3.poolmanager.pool_classes_by_scheme[
+    "https"
+] = eventline.client.HTTPSConnectionPool
