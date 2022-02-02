@@ -12,10 +12,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""The eventline.environment module is used to access information available in
-the local environment.
-"""
-
 import os
 from typing import Optional
 

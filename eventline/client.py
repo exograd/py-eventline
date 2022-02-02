@@ -12,8 +12,6 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""The eventline.client module contains the client for the Eventline API."""
-
 import datetime
 import json.decoder
 import logging

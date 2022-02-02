@@ -17,4 +17,7 @@ disallow_untyped_decorators = true
 max-line-length = 79
 
 [tool.pylint.messages-control]
-disable = "logging-fstring-interpolation" # allow f-strings when logging
+disable = [
+  "logging-fstring-interpolation", # allow f-strings when logging
+  "missing-module-docstring"
+]
