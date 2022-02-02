@@ -21,6 +21,7 @@ import urllib.parse
 import requests
 
 import eventline.environment
+import eventline.requests
 
 log = logging.getLogger(__name__)
 
@@ -95,13 +96,19 @@ class Client:
         """
         uri = self.build_uri(path)
         headers = {}
+        auth = None
         if self.api_key is not None:
-            headers["Authorization"] = f"Bearer {self.api_key}"
+            auth = eventline.requests.TokenAuth(self.api_key)
         if self.project_id is not None:
             headers["X-Eventline-Project-Id"] = self.project_id
         try:
             response = self.http_session.request(
-                method, uri, headers=headers, json=body, timeout=self.timeout
+                method,
+                uri,
+                auth=auth,
+                headers=headers,
+                json=body,
+                timeout=self.timeout,
             )
         except Exception as ex:
             raise ClientError(ex) from ex
