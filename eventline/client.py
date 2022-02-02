@@ -14,6 +14,7 @@
 
 """The eventline.client module contains the client for the Eventline API."""
 
+import datetime
 import json.decoder
 import logging
 from typing import Any, Optional
@@ -103,7 +104,10 @@ class Client:
             )
         except Exception as ex:
             raise ClientError(ex) from ex
-        if not (response.status_code >= 200 and response.status_code < 300):
+        status = response.status_code
+        time_string = format_request_time(response.elapsed)
+        log.debug(f"{method} {path} {status} {time_string}")
+        if not 200 <= status < 300:
             message = response.reason
             code = None
             try:
@@ -132,3 +136,14 @@ class Client:
         fragment = ""
         components = (scheme, address, full_path, "", query, fragment)
         return urllib.parse.urlunparse(components)
+
+
+def format_request_time(delta: datetime.timedelta) -> str:
+    """Format and return the time used to send a request and obtain the
+    response."""
+    seconds = delta.total_seconds()
+    if seconds < 0.001:
+        return f"{seconds*1_000_000:.0f}μs"
+    if seconds < 1.0:
+        return f"{seconds*1_000:.0f}ms"
+    return f"{seconds:0.1f}s"
