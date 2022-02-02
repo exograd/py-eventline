@@ -7,10 +7,10 @@ check: mypy pylint
 test: pytest
 
 mypy:
-	mypy $(PACKAGE)
+	mypy $(CURDIR)/$(PACKAGE)
 
 pylint:
-	pylint $(PACKAGE)
+	pylint $(CURDIR)/$(PACKAGE)
 
 pytest:
 	pytest $(CURDIR)/tests
