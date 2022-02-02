@@ -82,6 +82,9 @@ class Client:
         if self.project_id is None:
             self.project_id = eventline.environment.project_id()
 
+        self.http_session = requests.Session()
+        self.http_session.verify = eventline.ca_bundle_path
+
     def send_request(
         self, method: str, path: str, /, body: Optional[Any] = None
     ) -> requests.Response:
@@ -97,7 +100,7 @@ class Client:
         if self.project_id is not None:
             headers["X-Eventline-Project-Id"] = self.project_id
         try:
-            response = requests.request(
+            response = self.http_session.request(
                 method, uri, headers=headers, json=body, timeout=self.timeout
             )
         except Exception as ex:
