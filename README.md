@@ -1,5 +1,4 @@
 # Introduction
-
 This repository contains the Python SDK for the
 [Eventline](https://www.exograd.com/products/eventline) platform.
 

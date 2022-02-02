@@ -7,12 +7,15 @@ check: mypy pylint
 test: pytest
 
 mypy:
-	mypy $(CURDIR)/$(PACKAGE)
+	python -m mypy $(CURDIR)/$(PACKAGE)
 
 pylint:
-	pylint $(CURDIR)/$(PACKAGE)
+	python -m pylint $(CURDIR)/$(PACKAGE)
 
 pytest:
-	pytest $(CURDIR)/tests
+	python -m pytest $(CURDIR)/tests
 
-.PHONY: all check mypy pylint
+package:
+	python -m build $(CURDIR)
+
+.PHONY: all check mypy pylint package
