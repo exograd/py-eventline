@@ -25,7 +25,7 @@ max-line-length = 79
 
 [tool.pylint.messages-control]
 disable = [
-  "logging-fstring-interpolation", # allow f-strings when logging
+  "logging-fstring-interpolation",
   "missing-module-docstring",
   "no-self-use",
   "too-few-public-methods"
