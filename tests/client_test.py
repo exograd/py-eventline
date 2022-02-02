@@ -37,7 +37,7 @@ def test_build_uri_custom_endpoint():
 def test_send_request_status():
     c = Client()
     res = c.send_request("GET", "/status")
-    assert res.status_code == 200
+    assert res.status == 200
 
 
 def test_send_request_error():

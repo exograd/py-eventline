@@ -12,21 +12,18 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import base64
-import datetime
 import hashlib
+import json
 import json.decoder
 import logging
+import time
 from typing import Any, Optional
 import urllib.parse
 
 import OpenSSL.crypto
-import requests
-import requests.adapters
-from requests.packages import urllib3
+import urllib3
 
 import eventline.environment
-import eventline.requests
 
 log = logging.getLogger(__name__)
 
@@ -73,12 +70,9 @@ class Client:
         api_key: Optional[str] = None,
         project_id: Optional[str] = None,
     ) -> None:
-        self.endpoint = endpoint
-        self.endpoint_components = urllib.parse.urlparse(self.endpoint)
-        if self.endpoint_components[0].lower() != "https":
+        self.endpoint = urllib.parse.urlparse(endpoint)
+        if self.endpoint.scheme.lower() != "https":
             raise ClientError("invalid non-https endpoint uri scheme")
-
-        self.timeout = timeout
 
         self.api_key = api_key
         if self.api_key is None:
@@ -88,43 +82,56 @@ class Client:
         if self.project_id is None:
             self.project_id = eventline.environment.project_id()
 
-        self.session = requests.Session()
-        self.session.verify = eventline.ca_bundle_path
+        host = self.endpoint.hostname
+        port = self.endpoint.port
+        if port is None:
+            port = 443  # we only support https
+
+        self.pool = HTTPSConnectionPool(
+            host,
+            port=port,
+            ca_certs=eventline.ca_bundle_path,
+            timeout=timeout,
+            retries=0,
+        )
 
     def send_request(
         self, method: str, path: str, /, body: Optional[Any] = None
-    ) -> requests.Response:
+    ) -> urllib3.HTTPResponse:
         """Send a HTTP request and return the response.
 
         Raise an APIError exception if the status code of the response
         indicates an error.
         """
         uri = self.build_uri(path)
-        headers = {}
-        auth = None
-        if self.api_key is not None:
-            auth = eventline.requests.TokenAuth(self.api_key)
-        if self.project_id is not None:
-            headers["X-Eventline-Project-Id"] = self.project_id
         try:
-            response = self.session.request(
+            body_data = None
+            headers = {}
+            if self.api_key is not None:
+                headers["Authorization"] = "Bearer " + self.api_key
+            if self.project_id is not None:
+                headers["X-Eventline-Project-Id"] = self.project_id
+            if body is not None:
+                headers["Content-Type"] = "application/json"
+                body_data = json.dumps(body)
+            start = time.monotonic()
+            response = self.pool.urlopen(
                 method,
                 uri,
-                auth=auth,
                 headers=headers,
-                json=body,
-                timeout=self.timeout,
+                body=body_data,
             )
+            end = time.monotonic()
         except Exception as ex:
             raise ClientError(ex) from ex
-        status = response.status_code
-        time_string = format_request_time(response.elapsed)
+        status = response.status
+        time_string = format_request_time(end - start)
         log.debug(f"{method} {path} {status} {time_string}")
         if not 200 <= status < 300:
             message = response.reason
             code = None
             try:
-                error = response.json()
+                error = json.loads(response.data)
                 message = error["error"]
                 code = error["code"]
             except json.decoder.JSONDecodeError:
@@ -132,7 +139,7 @@ class Client:
             raise APIError(
                 method,
                 uri,
-                response.status_code,
+                response.status,
                 error_message=message,
                 error_code=code,
             )
@@ -140,7 +147,7 @@ class Client:
 
     def build_uri(self, path: str) -> str:
         """Construct the URI for an Eventline API route."""
-        scheme, address, base_path, _, _, _ = self.endpoint_components
+        scheme, address, base_path, _, _, _ = self.endpoint
         full_path = base_path
         if full_path.endswith("/"):
             full_path = full_path[:-1]  # String.removesuffix is 3.9+
@@ -151,10 +158,9 @@ class Client:
         return urllib.parse.urlunparse(components)
 
 
-def format_request_time(delta: datetime.timedelta) -> str:
+def format_request_time(seconds: float) -> str:
     """Format and return the time used to send a request and obtain the
     response."""
-    seconds = delta.total_seconds()
     if seconds < 0.001:
         return f"{seconds*1_000_000:.0f}μs"
     if seconds < 1.0:
@@ -182,7 +188,7 @@ class HTTPSConnectionPool(urllib3.HTTPSConnectionPool):
 
         pin = hashlib.sha256(key_data).hexdigest()
 
-        if not pin in eventline.public_key_pins:
+        if pin not in eventline.public_key_pins:
             raise ClientError(
                 f"invalid server certificate: unknown public key (pin {pin})"
             )
