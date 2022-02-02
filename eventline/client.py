@@ -17,7 +17,7 @@ import json
 import json.decoder
 import logging
 import time
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 import urllib.parse
 
 import OpenSSL.crypto
@@ -105,14 +105,9 @@ class Client:
         """
         uri = self.build_uri(path)
         try:
+            headers = self.build_headers(body)
             body_data = None
-            headers = {}
-            if self.api_key is not None:
-                headers["Authorization"] = "Bearer " + self.api_key
-            if self.project_id is not None:
-                headers["X-Eventline-Project-Id"] = self.project_id
             if body is not None:
-                headers["Content-Type"] = "application/json"
                 body_data = json.dumps(body)
             start = time.monotonic()
             response = self.pool.urlopen(
@@ -127,22 +122,7 @@ class Client:
         status = response.status
         time_string = format_request_time(end - start)
         log.debug(f"{method} {path} {status} {time_string}")
-        if not 200 <= status < 300:
-            message = response.reason
-            code = None
-            try:
-                error = json.loads(response.data)
-                message = error["error"]
-                code = error["code"]
-            except json.decoder.JSONDecodeError:
-                pass
-            raise APIError(
-                method,
-                uri,
-                response.status,
-                error_message=message,
-                error_code=code,
-            )
+        self.check_response(method, uri, response)
         return response
 
     def build_uri(self, path: str) -> str:
@@ -156,6 +136,49 @@ class Client:
         fragment = ""
         components = (scheme, address, full_path, "", query, fragment)
         return urllib.parse.urlunparse(components)
+
+    def build_headers(self, /, body: Optional[Any]) -> Dict[str, str]:
+        """Build the set of header fields for a request."""
+
+        headers = {}
+
+        if self.api_key is not None:
+            headers["Authorization"] = "Bearer " + self.api_key
+
+        if self.project_id is not None:
+            headers["X-Eventline-Project-Id"] = self.project_id
+
+        if body is not None:
+            headers["Content-Type"] = "application/json"
+
+        return headers
+
+    def check_response(
+        self, method: str, uri: str, response: urllib3.HTTPResponse
+    ) -> None:
+        """Check if a response indicates success or failure, and signal an
+        APIError exception if it is a failure."""
+
+        status = response.status
+        if 200 <= status < 300:
+            return
+
+        message = response.reason
+        code = None
+
+        try:
+            error = json.loads(response.data)
+            message = error["error"]
+            code = error["code"]
+        except json.decoder.JSONDecodeError:
+            pass
+        raise APIError(
+            method,
+            uri,
+            response.status,
+            error_message=message,
+            error_code=code,
+        )
 
 
 def format_request_time(seconds: float) -> str:

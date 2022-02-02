@@ -20,5 +20,6 @@ max-line-length = 79
 disable = [
   "logging-fstring-interpolation", # allow f-strings when logging
   "missing-module-docstring",
+  "no-self-use",
   "too-few-public-methods"
 ]
