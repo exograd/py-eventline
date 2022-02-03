@@ -16,9 +16,7 @@ import os
 
 import eventline.client
 
-ca_bundle_path = os.path.join(
-    os.path.dirname(__file__), "data", "ca-certificates.crt"
-)
+ca_bundle_path = os.path.join(os.path.dirname(__file__), "data", "cacert.pem")
 
 # https://www.exograd.com/resources/pki/
 public_key_pins = [
