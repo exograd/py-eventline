@@ -123,7 +123,10 @@ class Client:
         time_string = format_request_time(end - start)
         log.debug(f"{method} {path} {status} {time_string}")
         self.check_response(method, uri, response)
-        return response
+        # Ignore mypy error: Returning Any from function declared to return
+        # "HTTPResponse".
+        # This is probably due to some annotations missing from urllib3.
+        return response  # type: ignore
 
     def build_uri(self, path: str) -> str:
         """Construct the URI for an Eventline API route."""
@@ -195,7 +198,9 @@ class HTTPSConnectionPool(urllib3.HTTPSConnectionPool):
     """An urllib3 connection pool which performs public key pinning."""
 
     def _validate_conn(self, conn: urllib3.connection.HTTPConnection) -> None:
-        super()._validate_conn(conn)
+        # Ignore mypy error: "_validate_conn" undefined in superclass.
+        # This is obviously wrong.
+        super()._validate_conn(conn)  # type: ignore
         if not conn.is_verified:
             return
 
