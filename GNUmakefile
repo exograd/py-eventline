@@ -15,6 +15,9 @@ pylint:
 pytest:
 	python -m pytest $(CURDIR)/tests
 
+tox:
+	cd $(CURDIR) && python -m tox
+
 package:
 	python -m build $(CURDIR)
 
