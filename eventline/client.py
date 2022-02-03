@@ -57,6 +57,28 @@ class APIError(ClientError):
         self.error_message = error_message
 
 
+class Response:
+    """A representation of a successful response returned by Eventline."""
+
+    def __init__(self, response: urllib3.HTTPResponse) -> None:
+        self.status = response.status
+        self.header = response.headers
+        self.raw_body = response.data
+        self.body = self._decode_body()
+
+    def _decode_body(self) -> Any:
+        content_type = self.header.get("Content-Type")
+        if content_type == "application/json":
+            return self._decode_json_body()
+        raise ClientError(f"unhandle content type '{content_type}'")
+
+    def _decode_json_body(self) -> Any:
+        try:
+            return json.loads(self.raw_body)
+        except json.decoder.JSONDecodeError as ex:
+            raise ClientError(f"cannot decode response body: {ex}") from ex
+
+
 class Client:
     """A client for the Eventline API."""
 
@@ -97,7 +119,7 @@ class Client:
 
     def send_request(
         self, method: str, path: str, /, body: Optional[Any] = None
-    ) -> urllib3.HTTPResponse:
+    ) -> Response:
         """Send a HTTP request and return the response.
 
         Raise an APIError exception if the status code of the response
@@ -123,10 +145,7 @@ class Client:
         time_string = format_request_time(end - start)
         log.debug(f"{method} {path} {status} {time_string}")
         self.check_response(method, uri, response)
-        # Ignore mypy error: Returning Any from function declared to return
-        # "HTTPResponse".
-        # This is probably due to some annotations missing from urllib3.
-        return response  # type: ignore
+        return Response(response)
 
     def build_uri(self, path: str) -> str:
         """Construct the URI for an Eventline API route."""
