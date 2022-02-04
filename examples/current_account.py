@@ -23,8 +23,8 @@ import eventline
 
 client = eventline.APIClient()
 
-org = client.get_organization()
-account = client.get_account()
+org = client.get_current_organization()
+account = client.get_current_account()
 
 print(f"Account:      {account.email_address}")
 print(f"Organization: {org.name}")

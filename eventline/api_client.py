@@ -12,6 +12,8 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import urllib.parse
+
 from eventline.client import Client
 from eventline.account import Account
 from eventline.organization import Organization
@@ -20,14 +22,21 @@ from eventline.organization import Organization
 class APIClient(Client):
     """A high level API client for the Eventline API."""
 
-    def get_organization(self) -> Organization:
+    def get_current_organization(self) -> Organization:
         """Fetch the organization associated with the credentials currently
         used by the client."""
         response = self.send_request("GET", "/org")
         return Organization(response.body)
 
-    def get_account(self) -> Account:
+    def get_current_account(self) -> Account:
         """Fetch the account associated with the credentials currently used
         by the client."""
         response = self.send_request("GET", "/account")
+        return Account(response.body)
+
+    def get_account(self, id_: str) -> Account:
+        """Fetch an account by identifier."""
+        response = self.send_request(
+            "GET", f"/accounts/id/{urllib.parse.quote(id_)}"
+        )
         return Account(response.body)
