@@ -80,7 +80,7 @@ class Response:
 
 
 class Client:
-    """A client for the Eventline API."""
+    """The low level HTTP client for the Eventline API."""
 
     default_endpoint = "https://api.eventline.net/v0"
 
@@ -127,7 +127,7 @@ class Client:
         """
         uri = self.build_uri(path)
         try:
-            headers = self.build_headers(body)
+            headers = self._build_headers(body)
             body_data = None
             if body is not None:
                 body_data = json.dumps(body)
@@ -144,7 +144,7 @@ class Client:
         status = response.status
         time_string = format_request_time(end - start)
         log.debug(f"{method} {path} {status} {time_string}")
-        self.check_response(method, uri, response)
+        self._check_response(method, uri, response)
         return Response(response)
 
     def build_uri(self, path: str) -> str:
@@ -159,7 +159,7 @@ class Client:
         components = (scheme, address, full_path, "", query, fragment)
         return urllib.parse.urlunparse(components)
 
-    def build_headers(self, /, body: Optional[Any]) -> Dict[str, str]:
+    def _build_headers(self, /, body: Optional[Any]) -> Dict[str, str]:
         """Build the set of header fields for a request."""
 
         headers = {}
@@ -175,7 +175,7 @@ class Client:
 
         return headers
 
-    def check_response(
+    def _check_response(
         self, method: str, uri: str, response: urllib3.HTTPResponse
     ) -> None:
         """Check if a response indicates success or failure, and signal an

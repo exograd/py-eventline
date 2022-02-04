@@ -12,17 +12,15 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import os
+from eventline.client import Client
+from eventline.account import Account
 
-from .account import *
-from .api_client import *
-from .api_object import *
-from .client import *
-from .environment import *
 
-ca_bundle_path = os.path.join(os.path.dirname(__file__), "data", "cacert.pem")
+class APIClient(Client):
+    """A high level API client for the Eventline API."""
 
-# https://www.exograd.com/resources/pki/
-public_key_pins = [
-    "820df1ed4e14ad67d352960dcbdc0bdbe198390862ddf8395139f9a7303aee07"
-]
+    def get_account(self) -> Account:
+        """Fetch the account associated with the credentials currently used
+        by the client."""
+        response = self.send_request("GET", "/account")
+        return Account(response.body)
