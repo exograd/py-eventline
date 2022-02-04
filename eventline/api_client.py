@@ -12,11 +12,13 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from typing import Optional
 import urllib.parse
 
 from eventline.client import Client
 from eventline.account import Account
 from eventline.organization import Organization
+from eventline.pagination import Cursor, Page
 
 
 class APIClient(Client):
@@ -33,6 +35,11 @@ class APIClient(Client):
         by the client."""
         response = self.send_request("GET", "/account")
         return Account(response.body)
+
+    def get_accounts(self, /, cursor: Optional[Cursor] = None) -> Page:
+        """Fetch all accounts in the organization."""
+        response = self.send_request("GET", "/accounts", cursor=cursor)
+        return Page(Account, response.body)
 
     def get_account(self, id_: str) -> Account:
         """Fetch an account by identifier."""

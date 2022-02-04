@@ -119,6 +119,21 @@ class ReadableAPIObject(APIObject):
             attr = key
         setattr(self, attr, value)
 
+    def _read_integer(
+        self,
+        key: str,
+        /,
+        optional: bool = False,
+        default: int = False,
+        attr: Optional[str] = None,
+    ) -> None:
+        value = self._get_field(
+            key, int, "integer", optional=optional, default=default
+        )
+        if attr is None:
+            attr = key
+        setattr(self, attr, value)
+
     def _read_boolean(
         self,
         key: str,
@@ -139,10 +154,38 @@ class ReadableAPIObject(APIObject):
         key: str,
         class_type: Any,
         /,
+        optional: bool = False,
         attr: Optional[str] = None,
     ) -> None:
-        obj = self._get_field(key, dict, "object")
-        value = class_type(obj)
+        obj = self._get_field(key, dict, "object", optional=optional)
+        value = None
+        if obj is not None:
+            value = class_type(obj)
+        if attr is None:
+            attr = key
+        setattr(self, attr, value)
+
+    def _read_object_array(
+        self,
+        key: str,
+        element_class_type: Any,
+        /,
+        optional: bool = False,
+        attr: Optional[str] = None,
+    ) -> None:
+        array = self._get_field(key, list, "array", optional=optional)
+        value = None
+        if array is not None:
+            value = []
+            for i, element in enumerate(array):
+                if not isinstance(element, dict):
+                    raise InvalidObjectError(
+                        self.object_name,
+                        element,
+                        f"element at index {i} of field '{key}' is not an "
+                        "object",
+                    )
+                value.append(element_class_type(element))
         if attr is None:
             attr = key
         setattr(self, attr, value)

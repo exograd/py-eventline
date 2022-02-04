@@ -24,6 +24,7 @@ import OpenSSL.crypto
 import urllib3
 
 import eventline.environment
+import eventline.pagination
 
 log = logging.getLogger(__name__)
 
@@ -118,16 +119,22 @@ class Client:
         )
 
     def send_request(
-        self, method: str, path: str, /, body: Optional[Any] = None
+        self,
+        method: str,
+        path: str,
+        /,
+        query_parameters: Optional[Dict[str, str]] = None,
+        body: Optional[Any] = None,
+        cursor: Optional[eventline.pagination.Cursor] = None,
     ) -> Response:
         """Send a HTTP request and return the response.
 
         Raise an APIError exception if the status code of the response
         indicates an error.
         """
-        uri = self.build_uri(path)
+        uri = self.build_uri(path, query_parameters, cursor)
+        headers = self._build_headers(body)
         try:
-            headers = self._build_headers(body)
             body_data = None
             if body is not None:
                 body_data = json.dumps(body)
@@ -147,7 +154,12 @@ class Client:
         self._check_response(method, uri, response)
         return Response(response)
 
-    def build_uri(self, path: str) -> str:
+    def build_uri(
+        self,
+        path: str,
+        query_parameters: Optional[Dict[str, str]] = None,
+        cursor: Optional[eventline.pagination.Cursor] = None,
+    ) -> str:
         """Construct the URI for an Eventline API route."""
         scheme, address, base_path, _, _, _ = self.endpoint
         full_path = base_path
@@ -155,9 +167,35 @@ class Client:
             full_path = full_path[:-1]  # String.removesuffix is 3.9+
         full_path += path
         query = ""
+        all_query_parameters = self._build_query_parameters(
+            query_parameters, cursor
+        )
+        if len(all_query_parameters) > 0:
+            query = urllib.parse.urlencode(all_query_parameters)
         fragment = ""
         components = (scheme, address, full_path, "", query, fragment)
         return urllib.parse.urlunparse(components)
+
+    def _build_query_parameters(
+        self,
+        query_parameters: Optional[Dict[str, str]] = None,
+        cursor: Optional[eventline.pagination.Cursor] = None,
+    ) -> Dict[str, str]:
+        all_query_parameters = {}
+        if query_parameters is not None:
+            all_query_parameters.update(query_parameters)
+        if cursor is not None:
+            if cursor.before is not None:
+                all_query_parameters["before"] = cursor.before
+            if cursor.after is not None:
+                all_query_parameters["after"] = cursor.after
+            if cursor.size is not None:
+                all_query_parameters["size"] = str(cursor.size)
+            if cursor.sort is not None:
+                all_query_parameters["sort"] = cursor.sort
+            if cursor.order is not None:
+                all_query_parameters["order"] = cursor.order
+        return all_query_parameters
 
     def _build_headers(self, /, body: Optional[Any]) -> Dict[str, str]:
         """Build the set of header fields for a request."""
