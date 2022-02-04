@@ -20,29 +20,27 @@ from eventline.api_object import ReadableAPIObject
 class Account(ReadableAPIObject):
     """A user account."""
 
-    def __init__(self, data: Dict[str, Any]) -> None:
-        super().__init__("account", data)
-        self.read_data()
+    def __init__(self) -> None:
+        super().__init__("account")
 
-    def read_data(self) -> None:
-        self._read_string("id", attr="id_")
-        self._read_string("org_id")
-        self._read_datetime("creation_time")
-        self._read_boolean("disabled", optional=True)
-        self._read_string("email_address")
-        self._read_string("name", optional=True)
-        self._read_string("role")
-        self._read_datetime("last_login_time", optional=True)
-        self._read_string("last_project_id", optional=True)
-        self._read_object("settings", AccountSettings)
+    def read_data(self, data: Dict[str, Any]) -> None:
+        self._read_string(data, "id", attr="id_")
+        self._read_string(data, "org_id")
+        self._read_datetime(data, "creation_time")
+        self._read_boolean(data, "disabled", optional=True)
+        self._read_string(data, "email_address")
+        self._read_string(data, "name", optional=True)
+        self._read_string(data, "role")
+        self._read_datetime(data, "last_login_time", optional=True)
+        self._read_string(data, "last_project_id", optional=True)
+        self._read_object(data, "settings", AccountSettings)
 
 
 class AccountSettings(ReadableAPIObject):
     """The settings associated with a user account."""
 
-    def __init__(self, data: Dict[str, Any]) -> None:
-        super().__init__("account_settings", data)
-        self.read_data()
+    def __init__(self) -> None:
+        super().__init__("account_settings")
 
-    def read_data(self) -> None:
-        self._read_string("date_format", optional=True)
+    def read_data(self, data: Dict[str, Any]) -> None:
+        self._read_string(data, "date_format", optional=True)

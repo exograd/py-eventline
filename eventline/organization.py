@@ -20,19 +20,18 @@ from eventline.api_object import ReadableAPIObject
 class Organization(ReadableAPIObject):
     """An organization."""
 
-    def __init__(self, data: Dict[str, Any]) -> None:
-        super().__init__("organization", data)
-        self.read_data()
+    def __init__(self) -> None:
+        super().__init__("organization")
 
-    def read_data(self) -> None:
-        self._read_string("id", attr="id_")
-        self._read_string("name")
-        self._read_string("address")
-        self._read_string("postal_code")
-        self._read_string("city")
-        self._read_string("country")
-        self._read_datetime("creation_time")
-        self._read_boolean("disabled", optional=True)
-        self._read_string("contact_email_address")
-        self._read_boolean("non_essential_mail_opt_in", optional=True)
-        self._read_string("vat_id_number", optional=True)
+    def read_data(self, data: Dict[str, Any]) -> None:
+        self._read_string(data, "id", attr="id_")
+        self._read_string(data, "name")
+        self._read_string(data, "address")
+        self._read_string(data, "postal_code")
+        self._read_string(data, "city")
+        self._read_string(data, "country")
+        self._read_datetime(data, "creation_time")
+        self._read_boolean(data, "disabled", optional=True)
+        self._read_string(data, "contact_email_address")
+        self._read_boolean(data, "non_essential_mail_opt_in", optional=True)
+        self._read_string(data, "vat_id_number", optional=True)

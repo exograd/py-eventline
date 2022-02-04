@@ -150,7 +150,7 @@ class Client:
             raise ClientError(ex) from ex
         status = response.status
         time_string = format_request_time(end - start)
-        log.debug(f"{method} {path} {status} {time_string}")
+        log.debug(f"{method} {uri} {status} {time_string}")
         self._check_response(method, uri, response)
         return Response(response)
 

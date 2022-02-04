@@ -12,7 +12,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from eventline.api_object import ReadableAPIObject
 
@@ -20,27 +20,32 @@ from eventline.api_object import ReadableAPIObject
 class Cursor(ReadableAPIObject):
     """A cursor marking a position in a list of paginated objects."""
 
-    def __init__(self, data: Dict[str, Any]) -> None:
-        super().__init__("cursor", data)
-        self.read_data()
+    def __init__(
+        self, /, size: int = 20, sort: str = "id", order: str = "asc"
+    ) -> None:
+        super().__init__("cursor")
+        self.before = None  # type: Optional[str]
+        self.after = None  # type: Optional[str]
+        self.size = size
+        self.sort = sort
+        self.order = order
 
-    def read_data(self) -> None:
-        self._read_string("before", optional=True)
-        self._read_string("after", optional=True)
-        self._read_integer("size", optional=True)
-        self._read_string("sort", optional=True)
-        self._read_string("order", optional=True)
+    def read_data(self, data: Dict[str, Any]) -> None:
+        self._read_string(data, "before", optional=True)
+        self._read_string(data, "after", optional=True)
+        self._read_integer(data, "size", optional=True)
+        self._read_string(data, "sort", optional=True)
+        self._read_string(data, "order", optional=True)
 
 
 class Page(ReadableAPIObject):
     """A list of objects."""
 
-    def __init__(self, element_class_type: Any, data: Dict[str, Any]) -> None:
-        super().__init__("page", data)
+    def __init__(self, element_class_type: Any) -> None:
+        super().__init__("page")
         self.element_class_type = element_class_type
-        self.read_data()
 
-    def read_data(self) -> None:
-        self._read_object_array("elements", self.element_class_type)
-        self._read_object("previous", Cursor, optional=True)
-        self._read_object("next", Cursor, optional=True)
+    def read_data(self, data: Dict[str, Any]) -> None:
+        self._read_object_array(data, "elements", self.element_class_type)
+        self._read_object(data, "previous", Cursor, optional=True)
+        self._read_object(data, "next", Cursor, optional=True)

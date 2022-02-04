@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (c) 2022 Exograd SAS.
 #
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -12,18 +14,24 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import os
+import pathlib
+import sys
 
-from .account import *
-from .api_client import *
-from .api_object import *
-from .client import *
-from .environment import *
-from .pagination import *
+sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 
-ca_bundle_path = os.path.join(os.path.dirname(__file__), "data", "cacert.pem")
+from tabulate import tabulate
 
-# https://www.exograd.com/resources/pki/
-public_key_pins = [
-    "820df1ed4e14ad67d352960dcbdc0bdbe198390862ddf8395139f9a7303aee07"
-]
+import eventline
+
+client = eventline.APIClient()
+
+table = []
+
+cursor = eventline.Cursor(sort="name")
+while cursor is not None:
+    page = client.get_accounts(cursor=cursor)
+    for account in page.elements:
+        table.append([account.email_address, account.name])
+    cursor = page.next
+
+print(tabulate(table, ["Email address", "Name"]))

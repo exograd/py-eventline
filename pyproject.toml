@@ -20,8 +20,6 @@ disallow_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_decorators = true
 
-disable_error_code = "attr-defined"
-
 [tool.pylint.format]
 max-line-length = 79
 
@@ -31,5 +29,6 @@ disable = [
   "missing-function-docstring",
   "missing-module-docstring",
   "no-self-use",
+  "protected-access",
   "too-few-public-methods"
 ]

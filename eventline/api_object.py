@@ -34,13 +34,13 @@ class APIObject:
     """An object exposed by the Eventline API."""
 
     def __init__(self, object_name: str):
-        self.object_name = object_name
+        self._object_name = object_name
 
     def __str__(self) -> str:
         return repr(self)
 
     def __repr__(self) -> str:
-        string = f"<eventline.{self.object_name}"
+        string = f"<eventline.{self._object_name}"
         if hasattr(self, "id_"):
             id_ = getattr(self, "id_")
             if id_ is not None:
@@ -52,12 +52,9 @@ class APIObject:
 class ReadableAPIObject(APIObject):
     """An API object which can be read from a JSON object."""
 
-    def __init__(self, object_name: str, data: Dict[str, Any]) -> None:
-        super().__init__(object_name)
-        self._raw_data = data
-
     def _get_field(
         self,
+        data: Dict[str, Any],
         key: str,
         class_type: Any,
         class_name: str,
@@ -65,17 +62,17 @@ class ReadableAPIObject(APIObject):
         optional: bool = False,
         default: Optional[Any] = None,
     ) -> Any:
-        if optional is False and key not in self._raw_data:
+        if optional is False and key not in data:
             raise InvalidObjectError(
-                self.object_name, self._raw_data, f"missing field '{key}'"
+                self._object_name, data, f"missing field '{key}'"
             )
-        value = self._raw_data.get(key, default)
+        value = data.get(key, default)
         if value is not None and not isinstance(value, class_type):
             article = "a"
             if class_name[0] in ("a", "e", "i", "o", "u"):
                 article = "an"
             raise InvalidObjectError(
-                self.object_name,
+                self._object_name,
                 value,
                 f"field '{key}' is not {article} {class_name}",
             )
@@ -83,6 +80,7 @@ class ReadableAPIObject(APIObject):
 
     def _read_string(
         self,
+        data: Dict[str, Any],
         key: str,
         /,
         optional: bool = False,
@@ -90,7 +88,7 @@ class ReadableAPIObject(APIObject):
         attr: Optional[str] = None,
     ) -> None:
         value = self._get_field(
-            key, str, "string", optional=optional, default=default
+            data, key, str, "string", optional=optional, default=default
         )
         if attr is None:
             attr = key
@@ -98,20 +96,21 @@ class ReadableAPIObject(APIObject):
 
     def _read_datetime(
         self,
+        data: Dict[str, Any],
         key: str,
         /,
         optional: bool = False,
         default: Optional[datetime.datetime] = None,
         attr: Optional[str] = None,
     ) -> None:
-        string = self._get_field(key, str, "string", optional=optional)
+        string = self._get_field(data, key, str, "string", optional=optional)
         value = default
         if string is not None:
             try:
                 value = dateutil.parser.isoparse(string)
             except Exception as ex:
                 raise InvalidObjectError(
-                    self.object_name,
+                    self._object_name,
                     string,
                     f"field '{key}' is not a valid datetime",
                 ) from ex
@@ -121,6 +120,7 @@ class ReadableAPIObject(APIObject):
 
     def _read_integer(
         self,
+        data: Dict[str, Any],
         key: str,
         /,
         optional: bool = False,
@@ -128,7 +128,7 @@ class ReadableAPIObject(APIObject):
         attr: Optional[str] = None,
     ) -> None:
         value = self._get_field(
-            key, int, "integer", optional=optional, default=default
+            data, key, int, "integer", optional=optional, default=default
         )
         if attr is None:
             attr = key
@@ -136,6 +136,7 @@ class ReadableAPIObject(APIObject):
 
     def _read_boolean(
         self,
+        data: Dict[str, Any],
         key: str,
         /,
         optional: bool = False,
@@ -143,7 +144,7 @@ class ReadableAPIObject(APIObject):
         attr: Optional[str] = None,
     ) -> None:
         value = self._get_field(
-            key, bool, "boolean", optional=optional, default=default
+            data, key, bool, "boolean", optional=optional, default=default
         )
         if attr is None:
             attr = key
@@ -151,41 +152,46 @@ class ReadableAPIObject(APIObject):
 
     def _read_object(
         self,
+        data: Dict[str, Any],
         key: str,
         class_type: Any,
         /,
         optional: bool = False,
         attr: Optional[str] = None,
     ) -> None:
-        obj = self._get_field(key, dict, "object", optional=optional)
+        obj = self._get_field(data, key, dict, "object", optional=optional)
         value = None
         if obj is not None:
-            value = class_type(obj)
+            value = class_type()
+            value.read_data(obj)
         if attr is None:
             attr = key
         setattr(self, attr, value)
 
     def _read_object_array(
         self,
+        data: Dict[str, Any],
         key: str,
         element_class_type: Any,
         /,
         optional: bool = False,
         attr: Optional[str] = None,
     ) -> None:
-        array = self._get_field(key, list, "array", optional=optional)
+        array = self._get_field(data, key, list, "array", optional=optional)
         value = None
         if array is not None:
             value = []
             for i, element in enumerate(array):
                 if not isinstance(element, dict):
                     raise InvalidObjectError(
-                        self.object_name,
+                        self._object_name,
                         element,
                         f"element at index {i} of field '{key}' is not an "
                         "object",
                     )
-                value.append(element_class_type(element))
+                element_value = element_class_type()
+                element_value.read_data(element)
+                value.append(element_value)
         if attr is None:
             attr = key
         setattr(self, attr, value)
