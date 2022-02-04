@@ -70,9 +70,9 @@ class ReadableAPIObject(APIObject):
                 self.object_name, self._raw_data, f"missing field '{key}'"
             )
         value = self._raw_data.get(key, default)
-        if not isinstance(value, class_type):
+        if value is not None and not isinstance(value, class_type):
             article = "a"
-            if class_type[0] in ("a", "e", "i", "o", "u"):
+            if class_name[0] in ("a", "e", "i", "o", "u"):
                 article = "an"
             raise InvalidObjectError(
                 self.object_name,

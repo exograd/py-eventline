@@ -14,10 +14,17 @@
 
 from eventline.client import Client
 from eventline.account import Account
+from eventline.organization import Organization
 
 
 class APIClient(Client):
     """A high level API client for the Eventline API."""
+
+    def get_organization(self) -> Organization:
+        """Fetch the organization associated with the credentials currently
+        used by the client."""
+        response = self.send_request("GET", "/org")
+        return Organization(response.body)
 
     def get_account(self) -> Account:
         """Fetch the account associated with the credentials currently used
