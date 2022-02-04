@@ -45,4 +45,4 @@ class AccountSettings(ReadableAPIObject):
         self.read_data()
 
     def read_data(self) -> None:
-        self._read_string("date_format", optional=True, default="relative")
+        self._read_string("date_format", optional=True)
