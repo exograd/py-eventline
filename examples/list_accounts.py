@@ -27,7 +27,7 @@ client = eventline.APIClient()
 
 table = []
 
-cursor = eventline.Cursor(sort="name")
+cursor = eventline.Cursor(size=20, sort="name")
 while cursor is not None:
     page = client.get_accounts(cursor=cursor)
     for account in page.elements:

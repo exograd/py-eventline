@@ -12,13 +12,16 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from typing import Any, Optional
+from typing import Optional, TypeVar
 import urllib.parse
 
-from eventline.client import Client, Response
 from eventline.account import Account
+from eventline.api_object import ReadableAPIObject
+from eventline.client import Client, Response
 from eventline.organization import Organization
 from eventline.pagination import Cursor, Page
+
+T = TypeVar("T", bound=ReadableAPIObject)
 
 
 class APIClient(Client):
@@ -49,6 +52,7 @@ class APIClient(Client):
         return read_response(response, Account())
 
 
-def read_response(response: Response, value: Any) -> Any:
-    value.read_data(response.body)
+def read_response(response: Response, value: T) -> T:
+    """Read the content of a response and use it to populate an API object."""
+    value._read_data(response.body)
     return value

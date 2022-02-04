@@ -23,7 +23,7 @@ class Account(ReadableAPIObject):
     def __init__(self) -> None:
         super().__init__("account")
 
-    def read_data(self, data: Dict[str, Any]) -> None:
+    def _read_data(self, data: Dict[str, Any]) -> None:
         self._read_string(data, "id", attr="id_")
         self._read_string(data, "org_id")
         self._read_datetime(data, "creation_time")
@@ -42,5 +42,5 @@ class AccountSettings(ReadableAPIObject):
     def __init__(self) -> None:
         super().__init__("account_settings")
 
-    def read_data(self, data: Dict[str, Any]) -> None:
+    def _read_data(self, data: Dict[str, Any]) -> None:
         self._read_string(data, "date_format", optional=True)

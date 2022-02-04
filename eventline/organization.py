@@ -23,7 +23,7 @@ class Organization(ReadableAPIObject):
     def __init__(self) -> None:
         super().__init__("organization")
 
-    def read_data(self, data: Dict[str, Any]) -> None:
+    def _read_data(self, data: Dict[str, Any]) -> None:
         self._read_string(data, "id", attr="id_")
         self._read_string(data, "name")
         self._read_string(data, "address")

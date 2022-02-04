@@ -52,6 +52,9 @@ class APIObject:
 class ReadableAPIObject(APIObject):
     """An API object which can be read from a JSON object."""
 
+    def _read_data(self, data: Dict[str, Any]) -> None:
+        pass
+
     def _get_field(
         self,
         data: Dict[str, Any],
@@ -163,7 +166,7 @@ class ReadableAPIObject(APIObject):
         value = None
         if obj is not None:
             value = class_type()
-            value.read_data(obj)
+            value._read_data(obj)
         if attr is None:
             attr = key
         setattr(self, attr, value)
@@ -190,7 +193,7 @@ class ReadableAPIObject(APIObject):
                         "object",
                     )
                 element_value = element_class_type()
-                element_value.read_data(element)
+                element_value._read_data(element)
                 value.append(element_value)
         if attr is None:
             attr = key
