@@ -30,7 +30,7 @@ class Cursor(ReadableAPIObject):
         self.sort = sort
         self.order = order
 
-    def _read_data(self, data: Dict[str, Any]) -> None:
+    def _read(self, data: Dict[str, Any]) -> None:
         self._read_string(data, "before", optional=True)
         self._read_string(data, "after", optional=True)
         self._read_integer(data, "size", optional=True)
@@ -45,7 +45,7 @@ class Page(ReadableAPIObject):
         super().__init__("page")
         self.element_class_type = element_class_type
 
-    def _read_data(self, data: Dict[str, Any]) -> None:
+    def _read(self, data: Dict[str, Any]) -> None:
         self._read_object_array(data, "elements", self.element_class_type)
         self._read_object(data, "previous", Cursor, optional=True)
         self._read_object(data, "next", Cursor, optional=True)

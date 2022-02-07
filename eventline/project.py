@@ -14,24 +14,40 @@
 
 from typing import Any, Dict
 
-from eventline.api_object import ReadableAPIObject
+from eventline.api_object import ReadableAPIObject, SerializableAPIObject
 
 
-class Organization(ReadableAPIObject):
-    """An organization."""
+class Project(ReadableAPIObject):
+    """A Project."""
 
     def __init__(self) -> None:
-        super().__init__("organization")
+        super().__init__("project")
 
     def _read(self, data: Dict[str, Any]) -> None:
         self._read_string(data, "id", attr="id_")
+        self._read_string(data, "org_id")
         self._read_string(data, "name")
-        self._read_string(data, "address")
-        self._read_string(data, "postal_code")
-        self._read_string(data, "city")
-        self._read_string(data, "country")
-        self._read_datetime(data, "creation_time")
-        self._read_boolean(data, "disabled", optional=True)
-        self._read_string(data, "contact_email_address")
-        self._read_boolean(data, "non_essential_mail_opt_in", optional=True)
-        self._read_string(data, "vat_id_number", optional=True)
+
+
+class NewProject(SerializableAPIObject):
+    """A new project."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__("new_project")
+        self.name = name
+
+    def _serialize(self) -> Dict[str, Any]:
+        data = {"name": self.name}
+        return data
+
+
+class ProjectUpdate(SerializableAPIObject):
+    """An update applied to a project."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__("project_update")
+        self.name = name
+
+    def _serialize(self) -> Dict[str, Any]:
+        data = {"name": self.name}
+        return data

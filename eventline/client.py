@@ -68,10 +68,12 @@ class Response:
         self.body = self._decode_body()
 
     def _decode_body(self) -> Any:
+        if len(self.raw_body) == 0:
+            return None
         content_type = self.header.get("Content-Type")
         if content_type == "application/json":
             return self._decode_json_body()
-        raise ClientError(f"unhandle content type '{content_type}'")
+        raise ClientError(f"unhandled content type '{content_type}'")
 
     def _decode_json_body(self) -> Any:
         try:

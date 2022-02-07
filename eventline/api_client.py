@@ -20,6 +20,7 @@ from eventline.api_object import ReadableAPIObject
 from eventline.client import Client, Response
 from eventline.organization import Organization
 from eventline.pagination import Cursor, Page
+from eventline.project import Project, NewProject, ProjectUpdate
 
 T = TypeVar("T", bound=ReadableAPIObject)
 
@@ -46,13 +47,52 @@ class APIClient(Client):
 
     def get_account(self, id_: str) -> Account:
         """Fetch an account by identifier."""
-        response = self.send_request(
-            "GET", f"/accounts/id/{urllib.parse.quote(id_)}"
-        )
+        response = self.send_request("GET", f"/accounts/id/{path_escape(id_)}")
         return read_response(response, Account())
+
+    def get_projects(self, /, cursor: Optional[Cursor] = None) -> Page:
+        """Fetch all projects in the organization."""
+        response = self.send_request("GET", "/projects", cursor=cursor)
+        return read_response(response, Page(Project))
+
+    def create_project(self, new_project: NewProject) -> Project:
+        """Create a new project."""
+        body = new_project._serialize()
+        response = self.send_request("POST", "/projects", body=body)
+        return read_response(response, Project())
+
+    def get_project(self, id_: str) -> Project:
+        """Fetch a project by identifier."""
+        response = self.send_request("GET", f"/projects/id/{path_escape(id_)}")
+        return read_response(response, Project())
+
+    def get_project_by_name(self, name: str) -> Project:
+        """Fetch a project by name."""
+        response = self.send_request(
+            "GET", f"/projects/name/{path_escape(name)}"
+        )
+        return read_response(response, Project())
+
+    def update_project(
+        self, id_: str, project_update: ProjectUpdate
+    ) -> Project:
+        """Update an existing project."""
+        body = project_update._serialize()
+        response = self.send_request(
+            "PUT", f"/projects/id/{path_escape(id_)}", body=body
+        )
+        return read_response(response, Project())
+
+    def delete_project(self, id_: str) -> None:
+        """Delete a project."""
+        self.send_request("DELETE", f"/projects/id/{path_escape(id_)}")
+
+
+def path_escape(string: str) -> str:
+    return urllib.parse.quote(string)
 
 
 def read_response(response: Response, value: T) -> T:
     """Read the content of a response and use it to populate an API object."""
-    value._read_data(response.body)
+    value._read(response.body)
     return value
