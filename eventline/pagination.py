@@ -26,16 +26,16 @@ class Cursor(ReadableAPIObject):
         super().__init__("cursor")
         self.before = None  # type: Optional[str]
         self.after = None  # type: Optional[str]
-        self.size = size
-        self.sort = sort
-        self.order = order
+        self.size = size  # type: Optional[int]
+        self.sort = sort  # type: Optional[str]
+        self.order = order  # type: Optional[str]
 
     def _read(self, data: Dict[str, Any]) -> None:
-        self._read_string(data, "before", optional=True)
-        self._read_string(data, "after", optional=True)
-        self._read_integer(data, "size", optional=True)
-        self._read_string(data, "sort", optional=True)
-        self._read_string(data, "order", optional=True)
+        self.before = self._read_optional_string(data, "before")
+        self.after = self._read_optional_string(data, "after")
+        self.size = self._read_optional_integer(data, "size")
+        self.sort = self._read_optional_string(data, "sort")
+        self.order = self._read_optional_string(data, "order")
 
 
 class Page(ReadableAPIObject):
@@ -46,6 +46,8 @@ class Page(ReadableAPIObject):
         self.element_class_type = element_class_type
 
     def _read(self, data: Dict[str, Any]) -> None:
-        self._read_object_array(data, "elements", self.element_class_type)
-        self._read_object(data, "previous", Cursor, optional=True)
-        self._read_object(data, "next", Cursor, optional=True)
+        self.elements = self._read_object_array(
+            data, "elements", self.element_class_type
+        )
+        self.previous = self._read_optional_object(data, "previous", Cursor)
+        self.next = self._read_optional_object(data, "next", Cursor)

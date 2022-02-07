@@ -24,14 +24,18 @@ class Organization(ReadableAPIObject):
         super().__init__("organization")
 
     def _read(self, data: Dict[str, Any]) -> None:
-        self._read_string(data, "id", attr="id_")
-        self._read_string(data, "name")
-        self._read_string(data, "address")
-        self._read_string(data, "postal_code")
-        self._read_string(data, "city")
-        self._read_string(data, "country")
-        self._read_datetime(data, "creation_time")
-        self._read_boolean(data, "disabled", optional=True)
-        self._read_string(data, "contact_email_address")
-        self._read_boolean(data, "non_essential_mail_opt_in", optional=True)
-        self._read_string(data, "vat_id_number", optional=True)
+        self.id_ = self._read_string(data, "id")
+        self.name = self._read_string(data, "name")
+        self.address = self._read_string(data, "address")
+        self.postal_code = self._read_string(data, "postal_code")
+        self.city = self._read_string(data, "city")
+        self.country = self._read_string(data, "country")
+        self.creation_time = self._read_datetime(data, "creation_time")
+        self.disabled = self._read_optional_boolean(data, "disabled")
+        self.contact_email_address = self._read_string(
+            data, "contact_email_address"
+        )
+        self.non_essential_mail_opt_in = self._read_optional_boolean(
+            data, "non_essential_mail_opt_in"
+        )
+        self.vat_id_number = self._read_optional_string(data, "vat_id_number")

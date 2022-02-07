@@ -24,9 +24,9 @@ class Project(ReadableAPIObject):
         super().__init__("project")
 
     def _read(self, data: Dict[str, Any]) -> None:
-        self._read_string(data, "id", attr="id_")
-        self._read_string(data, "org_id")
-        self._read_string(data, "name")
+        self.id_ = self._read_string(data, "id")
+        self.org_id = self._read_string(data, "org_id")
+        self.name = self._read_string(data, "name")
 
 
 class NewProject(SerializableAPIObject):

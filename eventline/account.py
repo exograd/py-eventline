@@ -24,16 +24,20 @@ class Account(ReadableAPIObject):
         super().__init__("account")
 
     def _read(self, data: Dict[str, Any]) -> None:
-        self._read_string(data, "id", attr="id_")
-        self._read_string(data, "org_id")
-        self._read_datetime(data, "creation_time")
-        self._read_boolean(data, "disabled", optional=True)
-        self._read_string(data, "email_address")
-        self._read_string(data, "name", optional=True)
-        self._read_string(data, "role")
-        self._read_datetime(data, "last_login_time", optional=True)
-        self._read_string(data, "last_project_id", optional=True)
-        self._read_object(data, "settings", AccountSettings)
+        self.id_ = self._read_string(data, "id")
+        self.org_id = self._read_string(data, "org_id")
+        self.creation_time = self._read_datetime(data, "creation_time")
+        self.disabled = self._read_optional_boolean(data, "disabled")
+        self.email_address = self._read_string(data, "email_address")
+        self.name = self._read_optional_string(data, "name")
+        self.role = self._read_string(data, "role")
+        self.last_login_time = self._read_optional_datetime(
+            data, "last_login_time"
+        )
+        self.last_project_id = self._read_optional_string(
+            data, "last_project_id"
+        )
+        self.settings = self._read_object(data, "settings", AccountSettings)
 
 
 class AccountSettings(ReadableAPIObject):
@@ -43,4 +47,4 @@ class AccountSettings(ReadableAPIObject):
         super().__init__("account_settings")
 
     def _read(self, data: Dict[str, Any]) -> None:
-        self._read_string(data, "date_format", optional=True)
+        self.date_format = self._read_optional_string(data, "date_format")

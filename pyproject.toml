@@ -20,8 +20,6 @@ disallow_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_decorators = true
 
-disable_error_code = "attr-defined"
-
 [tool.pylint.basic]
 good-names = [
   "i",
@@ -29,11 +27,16 @@ good-names = [
   "T",
 ]
 
+[tool.pylint.design]
+max-attributes=100
+max-public-methods=100
+
 [tool.pylint.format]
 max-line-length = 79
 
 [tool.pylint.messages-control]
 disable = [
+  "attribute-defined-outside-init",
   "logging-fstring-interpolation",
   "missing-function-docstring",
   "missing-module-docstring",

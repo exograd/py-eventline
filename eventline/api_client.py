@@ -23,7 +23,7 @@ from eventline.pagination import Cursor, Page
 from eventline.project import Project, NewProject, ProjectUpdate
 from eventline.resource import Resource
 
-T = TypeVar("T", bound=ReadableAPIObject)
+ResponseObjectType = TypeVar("ResponseObjectType", bound=ReadableAPIObject)
 
 
 class APIClient(Client):
@@ -113,7 +113,9 @@ def path_escape(string: str) -> str:
     return urllib.parse.quote(string)
 
 
-def read_response(response: Response, value: T) -> T:
+def read_response(
+    response: Response, value: ResponseObjectType
+) -> ResponseObjectType:
     """Read the content of a response and use it to populate an API object."""
     value._read(response.body)
     return value

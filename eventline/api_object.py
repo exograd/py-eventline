@@ -13,10 +13,12 @@
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, TypeVar, Type
 
 
 import dateutil.parser
+
+FieldType = TypeVar("FieldType", str, datetime.datetime, int, bool, dict, list)
 
 
 class InvalidAPIObjectError(Exception):
@@ -55,21 +57,16 @@ class ReadableAPIObject(APIObject):
     def _read(self, data: Dict[str, Any]) -> None:
         pass
 
-    def _get_field(
+    def _get_optional_field(
         self,
         data: Dict[str, Any],
         key: str,
-        class_type: Any,
+        class_type: Type[FieldType],
         class_name: str,
-        /,
-        optional: bool = False,
-        default: Optional[Any] = None,
-    ) -> Any:
-        if optional is False and key not in data:
-            raise InvalidAPIObjectError(
-                self._object_name, data, f"missing field '{key}'"
-            )
-        value = data.get(key, default)
+    ) -> Optional[FieldType]:
+        if key not in data:
+            return None
+        value = data.get(key, None)
         if value is not None and not isinstance(value, class_type):
             article = "a"
             if class_name[0] in ("a", "e", "i", "o", "u"):
@@ -81,33 +78,41 @@ class ReadableAPIObject(APIObject):
             )
         return value
 
+    def _get_field(
+        self,
+        data: Dict[str, Any],
+        key: str,
+        class_type: Type[FieldType],
+        class_name: str,
+    ) -> FieldType:
+        value = self._get_optional_field(data, key, class_type, class_name)
+        if value is None:
+            raise InvalidAPIObjectError(
+                self._object_name, data, f"missing field '{key}'"
+            )
+        return value
+
+    def _read_optional_string(
+        self,
+        data: Dict[str, Any],
+        key: str,
+    ) -> Optional[str]:
+        return self._get_optional_field(data, key, str, "string")
+
     def _read_string(
         self,
         data: Dict[str, Any],
         key: str,
-        /,
-        optional: bool = False,
-        default: Optional[str] = None,
-        attr: Optional[str] = None,
-    ) -> None:
-        value = self._get_field(
-            data, key, str, "string", optional=optional, default=default
-        )
-        if attr is None:
-            attr = key
-        setattr(self, attr, value)
+    ) -> str:
+        return self._get_field(data, key, str, "string")
 
-    def _read_datetime(
+    def _read_optional_datetime(
         self,
         data: Dict[str, Any],
         key: str,
-        /,
-        optional: bool = False,
-        default: Optional[datetime.datetime] = None,
-        attr: Optional[str] = None,
-    ) -> None:
-        string = self._get_field(data, key, str, "string", optional=optional)
-        value = default
+    ) -> Optional[datetime.datetime]:
+        string = self._get_field(data, key, str, "string")
+        value = None
         if string is not None:
             try:
                 value = dateutil.parser.isoparse(string)
@@ -117,70 +122,84 @@ class ReadableAPIObject(APIObject):
                     string,
                     f"field '{key}' is not a valid datetime",
                 ) from ex
-        if attr is None:
-            attr = key
-        setattr(self, attr, value)
+        return value
+
+    def _read_datetime(
+        self,
+        data: Dict[str, Any],
+        key: str,
+    ) -> datetime.datetime:
+        value = self._read_optional_datetime(data, key)
+        if value is None:
+            raise InvalidAPIObjectError(
+                self._object_name, data, f"missing field '{key}'"
+            )
+        return value
+
+    def _read_optional_integer(
+        self,
+        data: Dict[str, Any],
+        key: str,
+    ) -> Optional[int]:
+        return self._get_optional_field(data, key, int, "integer")
 
     def _read_integer(
         self,
         data: Dict[str, Any],
         key: str,
-        /,
-        optional: bool = False,
-        default: int = False,
-        attr: Optional[str] = None,
-    ) -> None:
-        value = self._get_field(
-            data, key, int, "integer", optional=optional, default=default
-        )
-        if attr is None:
-            attr = key
-        setattr(self, attr, value)
+    ) -> int:
+        return self._get_field(data, key, int, "integer")
+
+    def _read_optional_boolean(
+        self,
+        data: Dict[str, Any],
+        key: str,
+    ) -> Optional[bool]:
+        value = self._get_optional_field(data, key, bool, "boolean")
+        if value is None:
+            value = False
+        return value
 
     def _read_boolean(
         self,
         data: Dict[str, Any],
         key: str,
-        /,
-        optional: bool = False,
-        default: bool = False,
-        attr: Optional[str] = None,
-    ) -> None:
-        value = self._get_field(
-            data, key, bool, "boolean", optional=optional, default=default
-        )
-        if attr is None:
-            attr = key
-        setattr(self, attr, value)
+    ) -> bool:
+        return self._get_field(data, key, bool, "boolean")
+
+    def _read_optional_object(
+        self,
+        data: Dict[str, Any],
+        key: str,
+        class_type: Any,
+    ) -> Optional[object]:
+        obj = self._get_optional_field(data, key, dict, "object")
+        value = None
+        if obj is not None:
+            value = class_type()
+            value._read(obj)
+        return value
 
     def _read_object(
         self,
         data: Dict[str, Any],
         key: str,
         class_type: Any,
-        /,
-        optional: bool = False,
-        attr: Optional[str] = None,
-    ) -> None:
-        obj = self._get_field(data, key, dict, "object", optional=optional)
-        value = None
-        if obj is not None:
-            value = class_type()
-            value._read(obj)
-        if attr is None:
-            attr = key
-        setattr(self, attr, value)
+    ) -> object:
+        value = self._read_optional_object(data, key, class_type)
+        if value is None:
+            raise InvalidAPIObjectError(
+                self._object_name, data, f"missing field '{key}'"
+            )
+        return value
 
-    def _read_object_array(
+    def _read_optional_object_array(
         self,
         data: Dict[str, Any],
         key: str,
         element_class_type: Any,
-        /,
-        optional: bool = False,
-        attr: Optional[str] = None,
-    ) -> None:
-        array = self._get_field(data, key, list, "array", optional=optional)
+    ) -> Optional[List[object]]:
+        array = self._get_field(data, key, list, "array")
         value = None
         if array is not None:
             value = []
@@ -195,9 +214,20 @@ class ReadableAPIObject(APIObject):
                 element_value = element_class_type()
                 element_value._read(element)
                 value.append(element_value)
-        if attr is None:
-            attr = key
-        setattr(self, attr, value)
+        return value
+
+    def _read_object_array(
+        self,
+        data: Dict[str, Any],
+        key: str,
+        element_class_type: Any,
+    ) -> List[object]:
+        value = self._read_optional_object_array(data, key, element_class_type)
+        if value is None:
+            raise InvalidAPIObjectError(
+                self._object_name, data, f"missing field '{key}'"
+            )
+        return value
 
 
 class SerializableAPIObject(APIObject):

@@ -24,10 +24,10 @@ class Resource(ReadableAPIObject):
         super().__init__("resource")
 
     def _read(self, data: Dict[str, Any]) -> None:
-        self._read_string(data, "id", attr="id_")
-        self._read_string(data, "org_id")
-        self._read_string(data, "project_id")
-        self._read_datetime(data, "creation_time")
-        self._read_datetime(data, "update_time")
-        self._read_boolean(data, "disabled", optional=True)
-        setattr(self, "spec", data["spec"])
+        self.id_ = self._read_string(data, "id")
+        self.org_id = self._read_string(data, "org_id")
+        self.project_id = self._read_string(data, "project_id")
+        self.creation_time = self._read_datetime(data, "creation_time")
+        self.update_time = self._read_datetime(data, "update_time")
+        self.disabled = self._read_optional_boolean(data, "disabled")
+        self.spec = data["spec"]
