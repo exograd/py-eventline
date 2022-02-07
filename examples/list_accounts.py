@@ -14,6 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import argparse
 import logging
 import pathlib
 import sys
@@ -27,6 +28,11 @@ import eventline.client
 
 logging.basicConfig(level=logging.INFO)
 eventline.client.log.setLevel(logging.DEBUG)
+
+parser = argparse.ArgumentParser(
+    description="List all accounts in the Eventline organization."
+)
+parser.parse_args()
 
 client = eventline.APIClient()
 

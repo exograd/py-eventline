@@ -26,16 +26,14 @@ import eventline
 logging.basicConfig(level=logging.INFO)
 eventline.client.log.setLevel(logging.DEBUG)
 
-parser = argparse.ArgumentParser(
-    description="Print information about the Eventline account associated "
-    "with the API key."
-)
-parser.parse_args()
+parser = argparse.ArgumentParser(description="Create an Eventline project.")
+parser.add_argument("name", type=str, help="the name of the project")
+args = parser.parse_args()
+
+new_project = eventline.NewProject(args.name)
 
 client = eventline.APIClient()
 
-org = client.get_current_organization()
-account = client.get_current_account()
+project = client.create_project(new_project)
 
-print(f"Account:      {account.email_address}")
-print(f"Organization: {org.name}")
+print(f"project {project.id_} created")
