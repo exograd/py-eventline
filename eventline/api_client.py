@@ -21,6 +21,7 @@ from eventline.client import Client, Response
 from eventline.organization import Organization
 from eventline.pagination import Cursor, Page
 from eventline.project import Project, NewProject, ProjectUpdate
+from eventline.resource import Resource
 
 T = TypeVar("T", bound=ReadableAPIObject)
 
@@ -51,7 +52,7 @@ class APIClient(Client):
         return read_response(response, Account())
 
     def get_projects(self, /, cursor: Optional[Cursor] = None) -> Page:
-        """Fetch all projects in the organization."""
+        """Fetch projects in the organization."""
         response = self.send_request("GET", "/projects", cursor=cursor)
         return read_response(response, Page(Project))
 
@@ -86,6 +87,26 @@ class APIClient(Client):
     def delete_project(self, id_: str) -> None:
         """Delete a project."""
         self.send_request("DELETE", f"/projects/id/{path_escape(id_)}")
+
+    def get_resources(self, /, cursor: Optional[Cursor] = None) -> Page:
+        """Fetch resources in the project."""
+        response = self.send_request("GET", "/resources", cursor=cursor)
+        return read_response(response, Page(Resource))
+
+    def get_resource(self, id_: str) -> Resource:
+        """Fetch a resource by identifier."""
+        response = self.send_request(
+            "GET", f"/resources/id/{path_escape(id_)}"
+        )
+        return read_response(response, Resource())
+
+    def get_resource_by_name(self, type_: str, name: str) -> Resource:
+        """Fetch a resource by type and name."""
+        response = self.send_request(
+            "GET",
+            f"/resources/type/{path_escape(type_)}/name/{path_escape(name)}",
+        )
+        return read_response(response, Resource())
 
 
 def path_escape(string: str) -> str:
