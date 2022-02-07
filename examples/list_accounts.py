@@ -14,6 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import logging
 import pathlib
 import sys
 
@@ -22,6 +23,10 @@ sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 from tabulate import tabulate
 
 import eventline
+import eventline.client
+
+logging.basicConfig(level=logging.INFO)
+eventline.client.log.setLevel(logging.DEBUG)
 
 client = eventline.APIClient()
 
