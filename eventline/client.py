@@ -25,6 +25,7 @@ import urllib3
 
 import eventline.environment
 import eventline.pagination
+from eventline.project import Project
 
 log = logging.getLogger(__name__)
 
@@ -94,6 +95,7 @@ class Client:
         timeout: float = 10.0,
         api_key: Optional[str] = None,
         project_id: Optional[str] = None,
+        project_name: Optional[str] = None,
     ) -> None:
         self.endpoint = urllib.parse.urlparse(endpoint)
         if self.endpoint.scheme.lower() != "https":
@@ -102,10 +104,6 @@ class Client:
         self.api_key = api_key
         if self.api_key is None:
             self.api_key = eventline.environment.api_key()
-
-        self.project_id = project_id
-        if self.project_id is None:
-            self.project_id = eventline.environment.project_id()
 
         host = self.endpoint.hostname
         port = self.endpoint.port
@@ -119,6 +117,21 @@ class Client:
             timeout=timeout,
             retries=0,
         )
+
+        self.project_id = None  # type: Optional[str]
+        if project_id is not None and project_name is not None:
+            raise ClientError("cannot set both project_id and project_name")
+        if project_id is not None:
+            self.project_id = project_id
+        elif project_name is not None:
+            response = self.send_request(
+                "GET", f"/projects/name/{urllib.parse.quote(project_name)}"
+            )
+            project = Project()
+            project._read(response.body)
+            self.project_id = project.id_
+        else:
+            self.project_id = eventline.environment.project_id()
 
     def send_request(
         self,
