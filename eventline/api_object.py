@@ -19,7 +19,7 @@ from typing import Any, Dict, Optional
 import dateutil.parser
 
 
-class InvalidObjectError(Exception):
+class InvalidAPIObjectError(Exception):
     """An error signaled when an API object contains invalid data."""
 
     def __init__(self, object_name: str, value: Any, reason: str) -> None:
@@ -66,7 +66,7 @@ class ReadableAPIObject(APIObject):
         default: Optional[Any] = None,
     ) -> Any:
         if optional is False and key not in data:
-            raise InvalidObjectError(
+            raise InvalidAPIObjectError(
                 self._object_name, data, f"missing field '{key}'"
             )
         value = data.get(key, default)
@@ -74,7 +74,7 @@ class ReadableAPIObject(APIObject):
             article = "a"
             if class_name[0] in ("a", "e", "i", "o", "u"):
                 article = "an"
-            raise InvalidObjectError(
+            raise InvalidAPIObjectError(
                 self._object_name,
                 value,
                 f"field '{key}' is not {article} {class_name}",
@@ -112,7 +112,7 @@ class ReadableAPIObject(APIObject):
             try:
                 value = dateutil.parser.isoparse(string)
             except Exception as ex:
-                raise InvalidObjectError(
+                raise InvalidAPIObjectError(
                     self._object_name,
                     string,
                     f"field '{key}' is not a valid datetime",
@@ -186,7 +186,7 @@ class ReadableAPIObject(APIObject):
             value = []
             for i, element in enumerate(array):
                 if not isinstance(element, dict):
-                    raise InvalidObjectError(
+                    raise InvalidAPIObjectError(
                         self._object_name,
                         element,
                         f"element at index {i} of field '{key}' is not an "

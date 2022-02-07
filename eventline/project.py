@@ -18,7 +18,7 @@ from eventline.api_object import ReadableAPIObject, SerializableAPIObject
 
 
 class Project(ReadableAPIObject):
-    """A Project."""
+    """A project."""
 
     def __init__(self) -> None:
         super().__init__("project")
