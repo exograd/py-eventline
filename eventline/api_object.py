@@ -64,6 +64,10 @@ class ReadableAPIObject(APIObject):
         class_type: Type[FieldType],
         class_name: str,
     ) -> Optional[FieldType]:
+        if not isinstance(data, dict):
+            raise InvalidAPIObjectError(
+                "response", data, f"response data are not an object"
+            )
         if key not in data:
             return None
         value = data.get(key, None)
