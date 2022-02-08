@@ -24,6 +24,7 @@ from eventline.organization import Organization
 from eventline.pagination import Cursor, Page
 from eventline.project import Project, NewProject, ProjectUpdate
 from eventline.resource import Resource
+from eventline.task import Task
 
 ResponseObjectType = TypeVar("ResponseObjectType", bound=ReadableAPIObject)
 
@@ -156,6 +157,16 @@ class APIClient(Client):
             value._read(value_object)
             events.append(value)
         return events
+
+    def get_tasks(self, /, cursor: Optional[Cursor] = None) -> Page:
+        """Fetch tasks in the project."""
+        response = self.send_request("GET", "/tasks", cursor=cursor)
+        return read_response(response, Page(Task))
+
+    def get_task(self, id_: str) -> Task:
+        """Fetch a task by identifier."""
+        response = self.send_request("GET", f"/tasks/id/{path_escape(id_)}")
+        return read_response(response, Task())
 
     def get_events(self, /, cursor: Optional[Cursor] = None) -> Page:
         """Fetch a list of events."""
