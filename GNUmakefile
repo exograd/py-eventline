@@ -19,6 +19,10 @@ tox:
 	cd $(CURDIR) && python -m tox
 
 package:
+	$(RM) -r $(CURDIR)/dist
 	python -m build $(CURDIR)
+
+release: package
+	twine upload --skip-existing $(CURDIR)/dist/*
 
 .PHONY: all check mypy pylint package
