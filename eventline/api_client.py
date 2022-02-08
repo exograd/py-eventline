@@ -12,7 +12,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from typing import Optional, TypeVar
+from typing import List, Optional, TypeVar
 import urllib.parse
 
 from eventline.account import Account
@@ -146,7 +146,7 @@ class APIClient(Client):
         )
         return read_response(response, CommandExecution())
 
-    def create_event(self, new_event: NewEvent) -> Event:
+    def create_event(self, new_event: NewEvent) -> List[Event]:
         """Create a new custom event."""
         body = new_event._serialize()
         response = self.send_request("POST", "/events", body=body)
