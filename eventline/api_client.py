@@ -19,6 +19,7 @@ from eventline.account import Account
 from eventline.api_object import ReadableAPIObject
 from eventline.client import Client, Response
 from eventline.command_execution import CommandExecutionInput, CommandExecution
+from eventline.event import Event, NewEvent
 from eventline.organization import Organization
 from eventline.pagination import Cursor, Page
 from eventline.project import Project, NewProject, ProjectUpdate
@@ -144,6 +145,27 @@ class APIClient(Client):
             "GET", f"/command_executions/id/{path_escape(id_)}"
         )
         return read_response(response, CommandExecution())
+
+    def create_event(self, new_event: NewEvent) -> Event:
+        """Create a new custom event."""
+        body = new_event._serialize()
+        response = self.send_request("POST", "/events", body=body)
+        events = []
+        for value_object in response.body:
+            value = Event()
+            value._read(value_object)
+            events.append(value)
+        return events
+
+    def get_events(self, /, cursor: Optional[Cursor] = None) -> Page:
+        """Fetch a list of events."""
+        response = self.send_request("GET", "/events", cursor=cursor)
+        return read_response(response, Page(Event))
+
+    def get_event(self, id_: str) -> Event:
+        """Fetch an event by identifier."""
+        response = self.send_request("GET", f"/events/id/{path_escape(id_)}")
+        return read_response(response, Event())
 
 
 def path_escape(string: str) -> str:
