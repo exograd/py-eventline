@@ -61,5 +61,6 @@ class NewEvent(SerializableAPIObject):
             "data": self.data,
         }  # type: Dict[str, Any]
         if self.event_time is not None:
-            data["event_time"] = self.event_time
+            event_time = self.event_time.replace(tzinfo=datetime.timezone.utc)
+            data["event_time"] = event_time.strftime("%Y-%m-%dT%H:%M:%SZ")
         return data
