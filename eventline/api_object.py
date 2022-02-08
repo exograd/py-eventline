@@ -66,7 +66,7 @@ class ReadableAPIObject(APIObject):
     ) -> Optional[FieldType]:
         if not isinstance(data, dict):
             raise InvalidAPIObjectError(
-                "response", data, f"response data are not an object"
+                "response", data, "response data are not an object"
             )
         if key not in data:
             return None
