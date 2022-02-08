@@ -98,8 +98,11 @@ class Client:
         project_name: Optional[str] = None,
     ) -> None:
         self.endpoint = urllib.parse.urlparse(endpoint)
-        if self.endpoint.scheme.lower() != "https":
-            raise ClientError("invalid non-https endpoint uri scheme")
+        scheme = self.endpoint.scheme.lower()
+        if not scheme in ("http", "https"):
+            raise ClientError(
+                f"invalid endpoint uri scheme '{self.endpoint.scheme}'"
+            )
 
         self.api_key = api_key
         if self.api_key is None:
@@ -108,15 +111,26 @@ class Client:
         host = self.endpoint.hostname
         port = self.endpoint.port
         if port is None:
-            port = 443  # we only support https
+            if scheme == "http":
+                port = 80
+            else:
+                port = 443
 
-        self.pool = HTTPSConnectionPool(
-            host,
-            port=port,
-            ca_certs=eventline.ca_bundle_path,
-            timeout=timeout,
-            retries=0,
-        )
+        if scheme == "http":
+            self.pool = urllib3.HTTPConnectionPool(
+                host,
+                port=port,
+                timeout=timeout,
+                retries=0,
+            )
+        else:
+            self.pool = HTTPSConnectionPool(
+                host,
+                port=port,
+                ca_certs=eventline.ca_bundle_path,
+                timeout=timeout,
+                retries=0,
+            )
 
         self.project_id = None  # type: Optional[str]
         if project_id is not None and project_name is not None:

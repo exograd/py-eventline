@@ -17,9 +17,9 @@ import pytest
 from eventline.client import ClientError, APIError, Client
 
 
-def test_unsafe_endpoint():
+def test_invalid_endpoint():
     with pytest.raises(ClientError):
-        Client(endpoint="http://eventline.net")
+        Client(endpoint="ftp://eventline.net")
 
 
 def test_build_uri_default_endpoint():
