@@ -18,6 +18,7 @@ import urllib.parse
 from eventline.account import Account
 from eventline.api_object import ReadableAPIObject
 from eventline.client import Client, Response
+from eventline.command_execution import CommandExecutionInput, CommandExecution
 from eventline.organization import Organization
 from eventline.pagination import Cursor, Page
 from eventline.project import Project, NewProject, ProjectUpdate
@@ -107,6 +108,17 @@ class APIClient(Client):
             f"/resources/type/{path_escape(type_)}/name/{path_escape(name)}",
         )
         return read_response(response, Resource())
+
+    def execute_command(
+        self, id_: str, input_: CommandExecutionInput
+    ) -> CommandExecution:
+        """Execute a command and return the associated command execution
+        object."""
+        body = input_._serialize()
+        response = self.send_request(
+            "POST", f"/commands/id/{path_escape(id_)}/execute", body=body
+        )
+        return read_response(response, CommandExecution())
 
 
 def path_escape(string: str) -> str:

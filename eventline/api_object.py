@@ -229,6 +229,38 @@ class ReadableAPIObject(APIObject):
             )
         return value
 
+    def _read_optional_string_array(
+        self,
+        data: Dict[str, Any],
+        key: str,
+    ) -> Optional[List[str]]:
+        array = self._get_field(data, key, list, "array")
+        value = None
+        if array is not None:
+            value = []
+            for i, element in enumerate(array):
+                if not isinstance(element, str):
+                    raise InvalidAPIObjectError(
+                        self._object_name,
+                        element,
+                        f"element at index {i} of field '{key}' is not a "
+                        "string",
+                    )
+                value.append(element)
+        return value
+
+    def _read_string_array(
+        self,
+        data: Dict[str, Any],
+        key: str,
+    ) -> List[str]:
+        value = self._read_optional_string_array(data, key)
+        if value is None:
+            raise InvalidAPIObjectError(
+                self._object_name, data, f"missing field '{key}'"
+            )
+        return value
+
 
 class SerializableAPIObject(APIObject):
     """An API object which can be serialized to a JSON object."""
