@@ -17,29 +17,23 @@ from typing import Any, Optional, Dict
 from eventline.api_object import ReadableAPIObject
 
 
-class Task(ReadableAPIObject):
-    """A task."""
+class Pipeline(ReadableAPIObject):
+    """A pipeline."""
 
     def __init__(self) -> None:
-        super().__init__("task")
+        super().__init__("pipeline")
 
     def _read(self, data: Dict[str, Any]) -> None:
         self.id_ = self._read_string(data, "id")
+        self.name = self._read_string(data, "name")
         self.org_id = self._read_string(data, "org_id")
         self.project_id = self._read_string(data, "project_id")
-        self.pipeline_id = self._read_string(data, "pipeline_id")
-        self.pipeline_task = data["pipeline_task"]
-        self.task_id = self._read_optional_string(data, "task_id")
-        self.task_identities = self._read_string_array(data, "task_identities")
-        self.spec = data["spec"]
-        if "command_parameters" in data:
-            self.spec = data["command_parameters"]
-        self.instance_id = self._read_integer(data, "instance_id")
+        self.creation_time = self._read_datetime(data, "creation_time")
+        self.pipeline_id = self._read_optional_string(data, "pipeline_id")
+        self.trigger_id = self._read_optional_string(data, "trigger_id")
+        self.command_id = self._read_optional_string(data, "command_id")
+        self.event_id = self._read_optional_string(data, "event_id")
+        self.concurrent = self._read_optional_boolean(data, "concurrent")
         self.status = self._read_string(data, "status")
         self.start_time = self._read_optional_datetime(data, "start_time")
         self.end_time = self._read_optional_datetime(data, "end_time")
-        self.dependencies = self._read_string_array(data, "dependencies")
-        self.failure_message = self._read_optional_string(
-            data, "failure_message"
-        )
-        self.retry = self._read_optional_integer(data, "retry")

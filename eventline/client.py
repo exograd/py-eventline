@@ -74,6 +74,8 @@ class Response:
         content_type = self.header.get("Content-Type")
         if content_type == "application/json":
             return self._decode_json_body()
+        if content_type == "text/plain":
+            return self.raw_body.decode("UTF-8", "strict")
         raise ClientError(f"unhandled content type '{content_type}'")
 
     def _decode_json_body(self) -> Any:
@@ -154,6 +156,7 @@ class Client:
         /,
         query_parameters: Optional[Dict[str, str]] = None,
         body: Optional[Any] = None,
+        raw_body: bool = False,
         cursor: Optional[eventline.pagination.Cursor] = None,
     ) -> Response:
         """Send a HTTP request and return the response.
@@ -166,7 +169,10 @@ class Client:
         try:
             body_data = None
             if body is not None:
-                body_data = json.dumps(body)
+                if raw_body is True:
+                    body_data = body
+                else:
+                    body_data = json.dumps(body)
             start = time.monotonic()
             response = self.pool.urlopen(
                 method,

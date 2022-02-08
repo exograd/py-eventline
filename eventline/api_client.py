@@ -12,7 +12,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-from typing import List, Optional, TypeVar
+from typing import Dict, List, Optional, TypeVar
 import urllib.parse
 
 from eventline.account import Account
@@ -22,6 +22,7 @@ from eventline.command_execution import CommandExecutionInput, CommandExecution
 from eventline.event import Event, NewEvent
 from eventline.organization import Organization
 from eventline.pagination import Cursor, Page
+from eventline.pipeline import Pipeline
 from eventline.project import Project, NewProject, ProjectUpdate
 from eventline.resource import Resource
 from eventline.task import Task
@@ -157,6 +158,72 @@ class APIClient(Client):
             value._read(value_object)
             events.append(value)
         return events
+
+    def get_pipelines(self, /, cursor: Optional[Cursor] = None) -> Page:
+        """Fetch pipelines in the project."""
+        response = self.send_request("GET", "/pipelines", cursor=cursor)
+        return read_response(response, Page(Pipeline))
+
+    def get_pipeline(self, id_: str) -> Pipeline:
+        """Fetch a pipeline by identifier."""
+        response = self.send_request(
+            "GET", f"/pipelines/id/{path_escape(id_)}"
+        )
+        return read_response(response, Pipeline())
+
+    def abort_pipeline(self, id_: str) -> None:
+        """Abort a pipeline."""
+        self.send_request("POST", f"/pipelines/id/{path_escape(id_)}/abort")
+
+    def restart_pipeline(self, id_: str) -> None:
+        """Restart a finished pipeline."""
+        self.send_request("POST", f"/pipelines/id/{path_escape(id_)}/restart")
+
+    def restart_pipeline_from_failure(self, id_: str) -> None:
+        """Restart the failed tasks in a finished pipeline."""
+        self.send_request(
+            "POST", f"/pipelines/id/{path_escape(id_)}/restart_from_failure"
+        )
+
+    def get_scratchpad(self, id_: str) -> Dict[str, str]:
+        """Fetch all entries in a scratchpad."""
+        response = self.send_request(
+            "GET", f"/pipelines/id/{path_escape(id_)}/scratchpad"
+        )
+        return response.body
+
+    def delete_scratchpad(self, id_: str) -> None:
+        """Delete all entries in a scratchpad."""
+        self.send_request(
+            "DELETE", f"/pipelines/id/{path_escape(id_)}/scratchpad"
+        )
+
+    def get_scratchpad_entry(self, id_: str, key: str) -> str:
+        """Fetch an entry in a scratchpad."""
+        response = self.send_request(
+            "GET",
+            f"/pipelines/id/{path_escape(id_)}/scratchpad"
+            f"/key/{path_escape(key)}",
+        )
+        return response.body
+
+    def set_scratchpad_entry(self, id_: str, key: str, value: str) -> None:
+        """set the value of an entry in a scratchpad."""
+        self.send_request(
+            "PUT",
+            f"/pipelines/id/{path_escape(id_)}/scratchpad"
+            f"/key/{path_escape(key)}",
+            body=value,
+            raw_body=True,
+        )
+
+    def delete_scratchpad_entry(self, id_: str, key: str) -> None:
+        """Delete an entry in a scratchpad."""
+        self.send_request(
+            "DELETE",
+            f"/pipelines/id/{path_escape(id_)}/scratchpad"
+            f"/key/{path_escape(key)}",
+        )
 
     def get_tasks(self, /, cursor: Optional[Cursor] = None) -> Page:
         """Fetch tasks in the project."""
