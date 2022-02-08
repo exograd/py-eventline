@@ -28,3 +28,9 @@ def project_id() -> Optional[str]:
     current environment.
     """
     return os.environ.get("EVENTLINE_PROJECT_ID")
+
+
+def context_path() -> Optional[str]:
+    """Return the path of the context file if it is available in the current
+    environment."""
+    return os.environ.get("EVENTLINE_CONTEXT_PATH")
