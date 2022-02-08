@@ -120,6 +120,31 @@ class APIClient(Client):
         )
         return read_response(response, CommandExecution())
 
+    def get_command_executions(
+        self,
+        /,
+        command_id: Optional[str] = None,
+        cursor: Optional[Cursor] = None,
+    ) -> Page:
+        """Fetch a list of command executions."""
+        query_parameters = {}
+        if command_id is not None:
+            query_parameters["command"] = command_id
+        response = self.send_request(
+            "GET",
+            "/command_executions",
+            query_parameters=query_parameters,
+            cursor=cursor,
+        )
+        return read_response(response, Page(CommandExecution))
+
+    def get_command_execution(self, id_: str) -> CommandExecution:
+        """Fetch a command execution by identifier."""
+        response = self.send_request(
+            "GET", f"/command_executions/id/{path_escape(id_)}"
+        )
+        return read_response(response, CommandExecution())
+
 
 def path_escape(string: str) -> str:
     return urllib.parse.quote(string)
