@@ -35,6 +35,7 @@ class Event(ReadableAPIObject):
         self.connector = self._read_string(data, "connector")
         self.name = self._read_string(data, "name")
         self.data = data["data"]
+        self.original_event_id = data["original_event_id"]
 
 
 class NewEvent(SerializableAPIObject):
