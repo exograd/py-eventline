@@ -159,6 +159,13 @@ class APIClient(Client):
             events.append(value)
         return events
 
+    def replay_event(self, id_: str) -> Event:
+        """Replay an existing event."""
+        response = self.send_request(
+            "POST", f"/events/id/{path_escape(id_)}/replay"
+        )
+        return read_response(response, Event())
+
     def get_pipelines(self, /, cursor: Optional[Cursor] = None) -> Page:
         """Fetch pipelines in the project."""
         response = self.send_request("GET", "/pipelines", cursor=cursor)
