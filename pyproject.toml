@@ -41,6 +41,7 @@ max-line-length = 79
 [tool.pylint.messages-control]
 disable = [
   "attribute-defined-outside-init",
+  "invalid-name",
   "logging-fstring-interpolation",
   "missing-function-docstring",
   "missing-module-docstring",
