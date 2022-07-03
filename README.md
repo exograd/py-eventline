@@ -1,3 +1,6 @@
+**This library is based on the old Eventline SaaS platform, and does not work
+with the new open source stand-alone Eventline server.**
+
 # Introduction
 This repository contains the Python SDK for the
 [Eventline](https://www.exograd.com/products/eventline) platform.
